@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+
+import cv2
+import numpy as np
+from depthai_sdk import OakCamera
+from depthai_sdk.classes import TwoStagePacket
+from depthai_sdk.visualize.configs import TextPosition
+import face_recognition  # Install using: pip install face_recognition
+
+class PedestrianReId:
+    def __init__(self) -> None:
+        self.results = []
+
+    def _cosine_dist(self, a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+    def new_result(self, vector_result) -> int:
+        vector_result = np.array(vector_result)
+        for i, vector in enumerate(self.results):
+            dist = self._cosine_dist(vector, vector_result)
+            if dist > 0.7:
+                self.results[i] = vector_result
+                return i
+        else:
+            self.results.append(vector_result)
+            return len(self.results) - 1
+
+# Function to recognize faces using face_recognition library
+def recognize_faces(frame, detections):
+    face_locations = []
+
+    for det in detections:
+        if hasattr(det, 'top') and hasattr(det, 'right') and hasattr(det, 'bottom') and hasattr(det, 'left'):
+            face_locations.append((det.top, det.right, det.bottom, det.left))
+        else:
+            # Handle case where attributes are missing (replace with appropriate values)
+            face_locations.append((0, 0, 0, 0))
+
+    # Load an image for face recognition (you may need to adapt this based on your use case)
+    # For simplicity, you can use the first frame captured
+    if len(face_locations) > 0:
+        face_encodings = face_recognition.face_encodings(frame, face_locations)
+        # Here you can implement logic to identify individuals based on face_encodings
+        # For example, compare with known face encodings or maintain a list of identified faces
+        # ...
+
+# Initialize OakCamera
+with OakCamera() as oak:
+    color = oak.create_camera('color', fps=10)
+
+    person_det = oak.create_nn('person-detection-retail-0013', color)
+    person_det.node.setNumInferenceThreads(2)
+    person_det.config_nn(resize_mode='crop')
+
+    nn_reid = oak.create_nn('person-reidentification-retail-0288', input=person_det)
+    nn_reid.node.setNumInferenceThreads(2)
+
+    reid = PedestrianReId()
+
+    def cb(packet: TwoStagePacket):
+        visualizer = packet.visualizer
+        for det, rec in zip(packet.detections, packet.nnData):
+            reid_result = rec.getFirstLayerFp16()
+            id = reid.new_result(reid_result)
+
+            visualizer.add_text(f"ID: {id}",
+                                bbox=(*det.top_left, *det.bottom_right),
+                                position=TextPosition.MID)
+
+        recognize_faces(packet.frame, packet.detections)  # Call face recognition function
+        frame = visualizer.draw(packet.frame)
+        cv2.imshow('Person reidentification', frame)
+
+    oak.visualize(nn_reid, callback=cb, fps=True)
+    oak.start(blocking=True)
