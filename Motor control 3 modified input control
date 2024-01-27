@@ -17,14 +17,16 @@ GPIO.setup([motor1_dir_pin1, motor1_dir_pin2, motor1_pwm_pin,
             motor2_dir_pin1, motor2_dir_pin2, motor2_pwm_pin], GPIO.OUT)
 
 # Initialize PWM
-motor1_pwm = GPIO.PWM(motor1_pwm_pin, 1000)  # Initialize PWM with a frequency of 1000 Hz
-motor2_pwm = GPIO.PWM(motor2_pwm_pin, 1000)
+motor1_pwm = GPIO.PWM(motor1_pwm_pin, 60)  # Set PWM frequency to 60 Hz
+motor2_pwm = GPIO.PWM(motor2_pwm_pin, 60)
 
 # Start PWM
 motor1_pwm.start(0)  # Start PWM with a duty cycle of 0 (off)
 motor2_pwm.start(0)
 
 def set_motor_speed(pwm, speed):
+    # Ensure the speed is between 0 and 98%
+    speed = max(0, min(speed, 98))
     pwm.ChangeDutyCycle(speed)
 
 def set_motor_direction(dir_pin1, dir_pin2, direction):
@@ -40,8 +42,8 @@ try:
     set_motor_direction(motor1_dir_pin1, motor1_dir_pin2, GPIO.HIGH)  # Set direction for motor 1
     set_motor_direction(motor2_dir_pin1, motor2_dir_pin2, GPIO.HIGH)  # Set direction for motor 2
 
-    set_motor_speed(motor1_pwm, 50)  # Set speed for motor 1 (0-100)
-    set_motor_speed(motor2_pwm, 50)  # Set speed for motor 2 (0-100)
+    set_motor_speed(motor1_pwm, 50)  # Set speed for motor 1 (0-98%)
+    set_motor_speed(motor2_pwm, 50)  # Set speed for motor 2 (0-98%)
 
     time.sleep(2)  # Move forward for 2 seconds
 
