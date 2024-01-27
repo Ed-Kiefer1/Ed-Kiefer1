@@ -1,0 +1,40 @@
+import RPi.GPIO as GPIO
+import time
+
+# Motor configuration
+motor_dir_pin1 = 22  # A1
+motor_dir_pin2 = 27  # A2
+motor_pwm_pin = 12   # PA
+
+# Set up GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup([motor_dir_pin1, motor_dir_pin2, motor_pwm_pin], GPIO.OUT)
+
+# Initialize PWM
+motor_pwm = GPIO.PWM(motor_pwm_pin, 60)  # Set PWM frequency to 60 Hz
+
+# Start PWM
+motor_pwm.start(0)  # Start PWM with a duty cycle of 0 (off)
+
+def set_motor_speed(pwm, speed):
+    # Ensure the speed is between 0 and 95%
+    speed = max(0, min(speed, 95))
+    pwm.ChangeDutyCycle(speed)
+
+def set_motor_direction(dir_pin1, dir_pin2, direction):
+    GPIO.output(dir_pin1, direction)
+    GPIO.output(dir_pin2, not direction)
+
+def stop_motor(pwm):
+    pwm.ChangeDutyCycle(0)
+
+try:
+    set_motor_direction(motor_dir_pin1, motor_dir_pin2, GPIO.HIGH)
+
+    set_motor_speed(motor_pwm, 50)  # Set speed for motor (0-95%)
+
+    time.sleep(5)  # Run motor forward for 5 seconds
+
+finally:
+    stop_motor(motor_pwm)
+    GPIO.cleanup()
