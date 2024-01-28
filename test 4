@@ -2,13 +2,13 @@ import RPi.GPIO as GPIO
 import time
 
 # Motor driver configuration
-direction_a1_pin = 23
-direction_a2_pin = 24
-pwm_a_pin = 12
+direction_a1_pin = 17
+direction_a2_pin = 18
+pwm_a_pin = 27
 
 direction_b1_pin = 22
-direction_b2_pin = 27
-pwm_b_pin = 13
+direction_b2_pin = 23
+pwm_b_pin = 24
 
 # Set up GPIO
 GPIO.setmode(GPIO.BCM)
@@ -18,7 +18,7 @@ GPIO.setup([direction_a1_pin, direction_a2_pin, pwm_a_pin,
             direction_b1_pin, direction_b2_pin, pwm_b_pin], GPIO.OUT)
 
 # Initialize PWM for both motors
-pwm_a = GPIO.PWM(pwm_a_pin, 60)  # Set PWM frequency to  Hz for Motor A
+pwm_a = GPIO.PWM(pwm_a_pin, 60)  # Set PWM frequency to 60 Hz for Motor A
 pwm_b = GPIO.PWM(pwm_b_pin, 60)  # Set PWM frequency to 60 Hz for Motor B
 
 # Start PWM for both motors
@@ -26,8 +26,8 @@ pwm_a.start(0)  # Start PWM with a duty cycle of 0 (off) for Motor A
 pwm_b.start(0)  # Start PWM with a duty cycle of 0 (off) for Motor B
 
 def test_motor(driver_pin1, driver_pin2, pwm, speed):
-    GPIO.output(driver_pin1, GPIO.HIGH)
-    GPIO.output(driver_pin2, GPIO.LOW)
+    GPIO.output(driver_pin1, 1)  # Set to HIGH (1)
+    GPIO.output(driver_pin2, 0)  # Set to LOW (0)
     
     # Ensure the speed is capped at 95%
     speed = min(speed, 95)
