@@ -2,14 +2,14 @@ import RPi.GPIO as GPIO
 import time
 
 # Motor 1 configuration
-motor1_dir_pin1 = 17  # A1 Motor 1
-motor1_dir_pin2 = 18  # A2 Motor 1
-motor1_pwm_pin = 27   # PA (PWM input) Motor 1
+motor1_dir_pin1 = 17  # Direction A1 Motor 1
+motor1_dir_pin2 = 18  # Direction A2 Motor 1
+motor1_pwm_pin = 27  # PWM input A Motor 1
 
 # Motor 2 configuration
-motor2_dir_pin1 = 22  # A1 Motor 2
-motor2_dir_pin2 = 23  # A2 Motor 2
-motor2_pwm_pin = 24   # PA (PWM input) Motor 2
+motor2_dir_pin1 = 22  # Direction A1 Motor 2
+motor2_dir_pin2 = 23  # Direction A2 Motor 2
+motor2_pwm_pin = 24  # PWM input A Motor 2
 
 # Set up GPIO
 GPIO.setmode(GPIO.BCM)
@@ -24,36 +24,44 @@ motor2_pwm = GPIO.PWM(motor2_pwm_pin, 60)  # Set PWM frequency to 60 Hz for Moto
 motor1_pwm.start(0)  # Start PWM with a duty cycle of 0 (off) for Motor 1
 motor2_pwm.start(0)  # Start PWM with a duty cycle of 0 (off) for Motor 2
 
-# Function to set motor speed with duty cycle limit
-def set_motor_speed(pwm, speed):
+def forward():
+    GPIO.output(motor1_dir_pin1, GPIO.HIGH)
+    GPIO.output(motor1_dir_pin2, GPIO.LOW)
+    GPIO.output(motor2_dir_pin1, GPIO.HIGH)
+    GPIO.output(motor2_dir_pin2, GPIO.LOW)
+
+def reverse():
+    GPIO.output(motor1_dir_pin1, GPIO.LOW)
+    GPIO.output(motor1_dir_pin2, GPIO.HIGH)
+    GPIO.output(motor2_dir_pin1, GPIO.LOW)
+    GPIO.output(motor2_dir_pin2, GPIO.HIGH)
+
+def set_speed(pwm, speed):
     # Ensure the speed is between 0 and 95%
     speed = max(0, min(speed, 95))
     pwm.ChangeDutyCycle(speed)
 
-# Function to set motor direction
-def set_motor_direction(dir_pin1, dir_pin2, direction):
-    GPIO.output(dir_pin1, direction)
-    GPIO.output(dir_pin2, not direction)
-
-# Function to stop motors
-def stop_motors():
+def stop():
     motor1_pwm.ChangeDutyCycle(0)
     motor2_pwm.ChangeDutyCycle(0)
+    GPIO.output(motor1_dir_pin1, GPIO.LOW)
+    GPIO.output(motor1_dir_pin2, GPIO.LOW)
+    GPIO.output(motor2_dir_pin1, GPIO.LOW)
+    GPIO.output(motor2_dir_pin2, GPIO.LOW)
 
 try:
-    # Motor 1 forward
-    set_motor_direction(motor1_dir_pin1, motor1_dir_pin2, GPIO.HIGH)
-    set_motor_speed(motor1_pwm, 50)  # Set speed for Motor 1 to 50%
+    forward()
+    set_speed(motor1_pwm, 50)  # Set speed for Motor 1 to 50%
+    set_speed(motor2_pwm, 50)  # Set speed for Motor 2 to 50%
+    time.sleep(5)  # Run forward for 5 seconds
 
-    # Motor 2 forward
-    set_motor_direction(motor2_dir_pin1, motor2_dir_pin2, GPIO.HIGH)
-    set_motor_speed(motor2_pwm, 75)  # Set speed for Motor 2 to 75%
-
-    # Run motors forward for 5 seconds
-    time.sleep(5)
+    reverse()
+    set_speed(motor1_pwm, 75)  # Set speed for Motor 1 to 75%
+    set_speed(motor2_pwm, 75)  # Set speed for Motor 2 to 75%
+    time.sleep(5)  # Run in reverse for 5 seconds
 
 finally:
-    stop_motors()  # Stop motors when done
+    stop()  # Stop motors
 
     # Clean up GPIO
     GPIO.cleanup()
