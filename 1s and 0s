@@ -1,0 +1,83 @@
+import RPi.GPIO as GPIO
+import time
+
+# Define GPIO pins for Motor 1
+A1_M1 = 17  # GPIO pin for A1 of Motor 1
+A2_M1 = 18  # GPIO pin for A2 of Motor 1
+PA_M1 = 27  # GPIO pin for PWM input of Motor 1
+
+# Define GPIO pins for Motor 2
+A1_M2 = 23  # GPIO pin for A1 of Motor 2
+A2_M2 = 24  # GPIO pin for A2 of Motor 2
+PA_M2 = 25  # GPIO pin for PWM input of Motor 2
+
+# Set the GPIO mode
+GPIO.setmode(GPIO.BCM)
+
+# Set up GPIO pins for Motor 1
+GPIO.setup(A1_M1, GPIO.OUT)
+GPIO.setup(A2_M1, GPIO.OUT)
+GPIO.setup(PA_M1, GPIO.OUT)
+
+# Set up GPIO pins for Motor 2
+GPIO.setup(A1_M2, GPIO.OUT)
+GPIO.setup(A2_M2, GPIO.OUT)
+GPIO.setup(PA_M2, GPIO.OUT)
+
+# Set initial state for Motor 1
+GPIO.output(A1_M1, 1)
+GPIO.output(A2_M1, 1)
+
+# Set initial state for Motor 2
+GPIO.output(A1_M2, 1)
+GPIO.output(A2_M2, 1)
+
+# Create PWM objects with a maximum duty cycle of 60%
+pwm_motor1 = GPIO.PWM(PA_M1, 60000)  # 60KHz frequency
+pwm_motor2 = GPIO.PWM(PA_M2, 60000)  # 60KHz frequency
+pwm_motor1.start(0)  # Start with a duty cycle of 0%
+pwm_motor2.start(0)  # Start with a duty cycle of 0%
+
+# Function to drive Motor 1 forward with limited duty cycle
+def forward_motor1():
+    pwm_motor1.ChangeDutyCycle(60)
+    GPIO.output(A1_M1, 0)
+    GPIO.output(A2_M1, 1)
+
+# Function to brake Motor 1
+def brake_motor1():
+    pwm_motor1.ChangeDutyCycle(0)
+    GPIO.output(A1_M1, 1)
+    GPIO.output(A2_M1, 1)
+
+# Function to drive Motor 2 backward with limited duty cycle
+def backward_motor2():
+    pwm_motor2.ChangeDutyCycle(60)
+    GPIO.output(A1_M2, 1)
+    GPIO.output(A2_M2, 0)
+
+# Function to brake Motor 2
+def brake_motor2():
+    pwm_motor2.ChangeDutyCycle(0)
+    GPIO.output(A1_M2, 1)
+    GPIO.output(A2_M2, 1)
+
+# Run Motor 1 forward for 5 seconds
+forward_motor1()
+time.sleep(5)
+
+# Brake Motor 1
+brake_motor1()
+time.sleep(1)  # Add a delay between operations
+
+# Run Motor 2 backward for 5 seconds
+backward_motor2()
+time.sleep(5)
+
+# Brake Motor 2
+brake_motor2()
+
+# Clean up PWM objects and GPIO settings
+pwm_motor1.stop()
+pwm_motor2.stop()
+GPIO.cleanup()
