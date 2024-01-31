@@ -2,6 +2,9 @@ import time
 from RpiMotorLib import rpi_dc_lib
 
 def dual_motor_controller_example():
+    Motor1 = None
+    Motor2 = None
+
     try:
         # Define instances of the class for Motor 1 (ENA, IN1, IN2, freq, verbose, name)
         Motor1 = rpi_dc_lib.HbridgeMotorDriver(19, 13, 26, 50, True, "motor_1")
@@ -32,4 +35,42 @@ def dual_motor_controller_example():
         time.sleep(3)
 
         print("3. Motor 1 backward at 20, Motor 2 backward at 30")
-     
+        Motor1.backward(20)
+        Motor2.backward(30)
+        input("Press key to stop")
+        Motor1.stop(0)
+        Motor2.stop(0)
+        print("Motors stopped")
+        time.sleep(3)
+
+        print("4. Motor 1 backward ramp speed up 20 to 30 steps of 1, Motor 2 forward ramp speed down 30 to 20 steps of 1")
+        for i in range(20, 30):
+            Motor1.backward(i if i <= speed_limit else speed_limit)
+            Motor2.forward(30 - i if i <= speed_limit else speed_limit)
+            time.sleep(1)
+        Motor1.stop(0)
+        Motor2.stop(0)
+        print("Motors stopped")
+        time.sleep(3)
+
+        print("5. Brake check for both motors")
+        Motor1.brake(0)
+        Motor2.brake(0)
+        print("Motors brake")
+        time.sleep(3)
+
+    except KeyboardInterrupt:
+        print("CTRL-C: Terminating program.")
+    except Exception as error:
+        print(f"Error: {error}")
+    else:
+        print("No errors")
+    finally:
+        if Motor1:
+            Motor1.cleanup(False)
+        if Motor2:
+            Motor2.cleanup(False)
+
+if __name__ == '__main__':
+    dual_motor_controller_example()
+    exit()
